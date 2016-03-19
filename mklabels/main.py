@@ -9,6 +9,8 @@ from textwrap import dedent
 PAPER_WIDTH_MM = 297
 PAPER_HEIGHT_MM = 210
 
+STYLES = ['default', 'circles']
+
 
 class ImpossibleLayout(Exception):
     pass
@@ -49,7 +51,8 @@ def layout(page_width, page_height, margin, label_width, label_height,
     return (rows, columns)
 
 
-def render(labels, margin, width, height, marker_length, marker_sep, debug):
+def render(labels, margin, width, height, marker_length, marker_sep, debug,
+           style):
     (rows, columns) = layout(PAPER_WIDTH_MM, PAPER_HEIGHT_MM, margin,
                              width, height, marker_length, marker_sep)
 
@@ -98,32 +101,69 @@ def render(labels, margin, width, height, marker_length, marker_sep, debug):
             %(debug)s\draw[blue] ($(\xpos,\ypos + 1/2 * \labelheight)$) --
             %(debug)s  +(\labelwidth,0);
 
-            \draw (\xpos,\ypos) ++(0,-\markersep) -- ++(0,-\markerlength);
-            \draw (\xpos,\ypos) ++(-\markersep,0) -- ++(-\markerlength,0);
+        """) % {
+            'x': x,
+            'y': y,
+            'debug': '' if debug else '%',
+        }
 
-            \draw ($(\xpos,\ypos + \labelheight)$) ++(0,\markersep) --
-              ++(0,\markerlength);
-            \draw ($(\xpos,\ypos + \labelheight)$) ++(-\markersep,0) --
-              ++(-\markerlength,0);
+        if style == 'default':
+            tex += dedent(r"""
+                \draw (\xpos,\ypos) ++(0,-\markersep) -- ++(0,-\markerlength);
+                \draw (\xpos,\ypos) ++(-\markersep,0) -- ++(-\markerlength,0);
 
-            \draw ($(\xpos + \labelwidth,\ypos)$) ++(0,-\markersep) --
-              ++(0,-\markerlength);
-            \draw ($(\xpos + \labelwidth,\ypos)$) ++(\markersep,0) --
-              ++(\markerlength,0);
+                \draw ($(\xpos,\ypos + \labelheight)$) ++(0,\markersep) --
+                  ++(0,\markerlength);
+                \draw ($(\xpos,\ypos + \labelheight)$) ++(-\markersep,0) --
+                  ++(-\markerlength,0);
 
-            \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$)
-              ++(0,\markersep) -- ++(0,\markerlength);
-            \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$)
-              ++(\markersep,0) -- ++(\markerlength,0);
+                \draw ($(\xpos + \labelwidth,\ypos)$) ++(0,-\markersep) --
+                  ++(0,-\markerlength);
+                \draw ($(\xpos + \labelwidth,\ypos)$) ++(\markersep,0) --
+                  ++(\markerlength,0);
 
+                \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$)
+                  ++(0,\markersep) -- ++(0,\markerlength);
+                \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$)
+                  ++(\markersep,0) -- ++(\markerlength,0);
+            """)
+        else:
+            tex += dedent(r"""
+                \draw (\xpos,\ypos) -- ++(0,-\markersep) --
+                  ++(0,-\markerlength);
+                \draw (\xpos,\ypos) -- ++(-\markersep,0) --
+                  ++(-\markerlength,0);
+                \draw (\xpos,\ypos)
+                  ++(0,\markerlength) arc (90:360:\markerlength);
+
+                \draw ($(\xpos,\ypos + \labelheight)$) -- ++(0,\markersep) --
+                  ++(0,\markerlength);
+                \draw ($(\xpos,\ypos + \labelheight)$) -- ++(-\markersep,0) --
+                  ++(-\markerlength,0);
+                \draw ($(\xpos,\ypos + \labelheight)$)
+                  ++(\markerlength,0) arc (0:270:\markerlength);
+
+                \draw ($(\xpos + \labelwidth,\ypos)$) -- ++(0,-\markersep) --
+                  ++(0,-\markerlength);
+                \draw ($(\xpos + \labelwidth,\ypos)$) -- ++(\markersep,0) --
+                  ++(\markerlength,0);
+                \draw ($(\xpos + \labelwidth,\ypos)$)
+                  ++(-\markerlength,0) arc (-180:90:\markerlength);
+
+                \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$) --
+                  ++(0,\markersep) -- ++(0,\markerlength);
+                \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$) --
+                  ++(\markersep,0) -- ++(\markerlength,0);
+                \draw ($(\xpos + \labelwidth,\ypos + \labelheight)$)
+                  ++(-\markerlength,0) arc (180:-90:\markerlength);
+            """)
+
+        tex += dedent(r"""
             \node[font=\sffamily\LARGE] at
               ($(\xpos + 1/2 * \labelwidth, \ypos + 1/2 * \labelheight)$)
               {\strut %(label)s};
         """) % {
-            'x': x,
-            'y': y,
             'label': quote_latex(label),
-            'debug': '' if debug else '%',
         }
 
         if (x + 1) < columns:
@@ -168,6 +208,8 @@ def parse_args():
                         'page margins of the whole page (mm)')
     parser.add_argument('--marker-sep', '-s', type=int, default=1, help=''
                         'marker distance to cut point (mm)')
+    parser.add_argument('--style', '-S', default='default', choices=STYLES,
+                        help='cutting guide style')
     parser.add_argument('--width', '-W', type=int, default=56, help=''
                         'width of the labels (mm)')
 
@@ -178,7 +220,7 @@ def run():
     args = parse_args()
     output = render(
         args.labels, args.page_margin, args.width, args.height,
-        args.marker_length, args.marker_sep, args.debug)
+        args.marker_length, args.marker_sep, args.debug, args.style)
 
     if args.latex_only:
         print(output)
