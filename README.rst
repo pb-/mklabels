@@ -4,6 +4,10 @@ mklabels
 
 ``mklabels`` generates a printable PDF sheet of labels with cutting guides.
 
+Sometimes you simply want to label stuff in a consistent way.
+For example folders, spices, drawers, doorbell signs, ... you name it.
+With ``mklabels`` you can prepare a PDF file with labels of specified size including cutting guides that help you to cut out the individual labels.
+
 
 Installation
 ------------
