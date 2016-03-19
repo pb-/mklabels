@@ -50,7 +50,7 @@ def layout(page_width, page_height, margin, label_width, label_height,
     return (rows, columns)
 
 
-def render(labels, margin, width, height, marker_length, marker_sep):
+def render(labels, margin, width, height, marker_length, marker_sep, debug):
     (rows, columns) = layout(PAPER_WIDTH_MM, PAPER_HEIGHT_MM, margin,
                              width, height, marker_length, marker_sep)
 
@@ -94,10 +94,10 @@ def render(labels, margin, width, height, marker_length, marker_sep):
             \pgfmathsetmacro{\ypos}{\margin + %(y)d * (
               \labelheight + 2 * \markerlength + 2 * \markersep)};
 
-            %% debugging help lines
-            %%\draw[red] (\xpos,\ypos) rectangle +(\labelwidth,\labelheight);
-            %%\draw[blue] ($(\xpos,\ypos + 1/2 * \labelheight)$) --
-            %%  +(\labelwidth,0);
+            %(debug)s\draw[red] (\xpos,\ypos) rectangle
+            %(debug)s  +(\labelwidth,\labelheight);
+            %(debug)s\draw[blue] ($(\xpos,\ypos + 1/2 * \labelheight)$) --
+            %(debug)s  +(\labelwidth,0);
 
             \draw (\xpos,\ypos) ++(0,-\markersep) -- ++(0,-\markerlength);
             \draw (\xpos,\ypos) ++(-\markersep,0) -- ++(-\markerlength,0);
@@ -124,6 +124,7 @@ def render(labels, margin, width, height, marker_length, marker_sep):
             'x': x,
             'y': y,
             'label': quote_latex(label),
+            'debug': '' if debug else '%',
         }
 
         if (x + 1) < columns:
@@ -156,6 +157,8 @@ def compile_pdf(latex):
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('labels', metavar='LABEL', nargs='+')
+    parser.add_argument('--debug', '-d', action='store_true', help=''
+                        'add debug guides to PDF output')
     parser.add_argument('--height', '-H', type=int, default=13, help=''
                         'height of the labels (mm)')
     parser.add_argument('--latex-only', '-t', action='store_true', help=''
@@ -176,7 +179,7 @@ def run():
     args = parse_args()
     output = render(
         args.labels, args.page_margin, args.width, args.height,
-        args.marker_length, args.marker_sep)
+        args.marker_length, args.marker_sep, args.debug)
 
     if args.latex_only:
         print(output)
