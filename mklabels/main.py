@@ -187,7 +187,7 @@ def compile_pdf(latex):
         with file('labels.tex', 'w') as f:
             f.write(latex)
         check_output(
-            ['pdflatex', 'labels.tex', '-halt-on-error'], stderr=STDOUT)
+            ['pdflatex', '-halt-on-error', 'labels.tex'], stderr=STDOUT)
         check_output(['xdg-open', 'labels.pdf'])
     finally:
         rmtree(directory)
