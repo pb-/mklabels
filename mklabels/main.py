@@ -5,7 +5,6 @@ from subprocess import STDOUT, check_output
 from tempfile import mkdtemp
 from textwrap import dedent
 
-
 # A4 landscape
 PAPER_WIDTH_MM = 297
 PAPER_HEIGHT_MM = 210
