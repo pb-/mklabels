@@ -10,6 +10,8 @@ PAPER_WIDTH_MM = 297
 PAPER_HEIGHT_MM = 210
 
 STYLES = ['default', 'circles']
+FONT_SIZES = ['tiny', 'scriptsize', 'footnotesize', 'small', 'normalsize',
+              'large', 'Large', 'LARGE', 'huge', 'Huge']
 
 
 class ImpossibleLayout(Exception):
@@ -52,7 +54,7 @@ def layout(page_width, page_height, margin, label_width, label_height,
 
 
 def render(labels, margin, width, height, marker_length, marker_sep, debug,
-           style):
+           style, font_size):
     (rows, columns) = layout(PAPER_WIDTH_MM, PAPER_HEIGHT_MM, margin,
                              width, height, marker_length, marker_sep)
 
@@ -159,10 +161,11 @@ def render(labels, margin, width, height, marker_length, marker_sep, debug,
             """)
 
         tex += dedent(r"""
-            \node[font=\sffamily\LARGE] at
+            \node[font=\sffamily\%(font_size)s] at
               ($(\xpos + 1/2 * \labelwidth, \ypos + 1/2 * \labelheight)$)
               {\strut %(label)s};
         """) % {
+            'font_size': font_size,
             'label': quote_latex(label),
         }
 
@@ -198,6 +201,8 @@ def parse_args():
     parser.add_argument('labels', metavar='LABEL', nargs='+')
     parser.add_argument('--debug', '-d', action='store_true', help=''
                         'add debug guides to PDF output')
+    parser.add_argument('--font-size', '-f', default='LARGE',
+                        choices=FONT_SIZES, help='font size (use LaTeX sizes)')
     parser.add_argument('--height', '-H', type=int, default=13, help=''
                         'height of the labels (mm)')
     parser.add_argument('--latex-only', '-t', action='store_true', help=''
@@ -220,7 +225,8 @@ def run():
     args = parse_args()
     output = render(
         args.labels, args.page_margin, args.width, args.height,
-        args.marker_length, args.marker_sep, args.debug, args.style)
+        args.marker_length, args.marker_sep, args.debug, args.style,
+        args.font_size)
 
     if args.latex_only:
         print(output)
